@@ -12,14 +12,13 @@ class IdeasContainer extends Component {
       ideas: [],
       editingIdeaId: null,
       notification: '',
-      transitionIn: true
+      transitionIn: false
     }
   }
 
   componentDidMount() {
     axios.get('http://localhost:3001/api/v1/ideas.json')
     .then(response => {
-      console.log(response)
       this.setState({ideas: response.data})
     })
     .catch(error => console.log(error))
@@ -36,7 +35,6 @@ class IdeasContainer extends Component {
       }
     )
     .then(response => {
-      console.log(response)
       const ideas = update(this.state.ideas, {
         $splice: [[0, 0, response.data]]
       })
@@ -58,6 +56,16 @@ class IdeasContainer extends Component {
       notification: 'All changes saved',
       transitionIn: true
     })
+  }
+
+  deleteIdea = (id) => {
+    axios.delete(`http://localhost:3001/api/v1/ideas/${id}`)
+    .then(response => {
+      const ideaIndex = this.state.ideas.findIndex(x => x.id === id)
+      const ideas = update(this.state.ideas, { $splice: [[ideaIndex, 1]]})
+      this.setState({ideas: ideas})
+    })
+    .catch(error => console.log(error))
   }
 
   resetNotification = () => {
@@ -82,9 +90,13 @@ class IdeasContainer extends Component {
             return(
               <IdeaForm idea={idea} key={idea.id}
                updateIdea={this.updateIdea}
+               titleRef= {input => this.title = input}
                resetNotification={this.resetNotification} />)
           } else {
-            return (<Idea idea={idea} key={idea.id} onClick={this.enableEditing} />)
+            return (
+              <Idea idea={idea} key={idea.id}
+              onClick={this.enableEditing}
+              onDelete={this.deleteIdea} />)
           }
         })}
       </div>
